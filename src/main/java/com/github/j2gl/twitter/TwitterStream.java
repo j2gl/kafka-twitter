@@ -17,8 +17,8 @@ public class TwitterStream {
     public void readFromTwitter(String bearerToken) throws IOException {
         FilteredStream filteredStream = new FilteredStream();
         try {
-            createRules(filteredStream, bearerToken);
-            filteredStream.connectStream(bearerToken);
+            // createRules(filteredStream, bearerToken);
+            filteredStream.connectStream(bearerToken, 2);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }

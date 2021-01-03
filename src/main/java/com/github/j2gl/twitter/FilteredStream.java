@@ -6,10 +6,12 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
@@ -34,29 +36,38 @@ public class FilteredStream {
     /*
      * This method calls the filtered stream endpoint and streams Tweets from it
      * */
-    public void connectStream(String bearerToken) throws IOException, URISyntaxException {
+    public void connectStream(String bearerToken, int maxNumberOfTweets) throws IOException, URISyntaxException {
+        try (CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(
+                        RequestConfig.custom()
+                                .setCookieSpec(CookieSpecs.STANDARD).build())
+                .build()) {
+            URIBuilder uriBuilder = new URIBuilder(STREAM_BASE_URI);
+            uriBuilder.addParameter("tweet.fields", "author_id,context_annotations,created_at,geo,in_reply_to_user_id,lang,public_metrics,source,text,withheld");
+            uriBuilder.addParameter("expansions", "geo.place_id");
 
-        HttpClient httpClient = HttpClients.custom()
-                .setDefaultRequestConfig(RequestConfig.custom()
-                        .setCookieSpec(CookieSpecs.STANDARD).build())
-                .build();
+            HttpGet httpGet = new HttpGet(uriBuilder.build());
+            httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
 
-        URIBuilder uriBuilder = new URIBuilder(STREAM_BASE_URI);
-        uriBuilder.addParameter("tweet.fields", "author_id,context_annotations,created_at,geo,in_reply_to_user_id,lang,public_metrics,source,text,withheld");
-        uriBuilder.addParameter("expansions", "geo.place_id");
-
-        HttpGet httpGet = new HttpGet(uriBuilder.build());
-        httpGet.setHeader("Authorization", String.format("Bearer %s", bearerToken));
-
-        HttpResponse response = httpClient.execute(httpGet);
-        HttpEntity entity = response.getEntity();
-        if (null != entity) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader((entity.getContent())));
-            String line = reader.readLine();
-            while (line != null) {
-                System.out.println(line);
-                line = reader.readLine();
+            HttpEntity entity;
+            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+                entity = response.getEntity();
+                if (entity != null) {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader((entity.getContent())))) {
+                        String line = reader.readLine();
+                        int count = 0;
+                        while (line != null && count <= maxNumberOfTweets) {
+                            count++;
+                            System.out.println(line);
+                            line = reader.readLine();
+                        }
+                    }
+                }
+            } finally {
+                logger.info("CloseableHttpResponse closed");
             }
+        } finally {
+            logger.info("CloseableHttpClient closed");
         }
     }
 
