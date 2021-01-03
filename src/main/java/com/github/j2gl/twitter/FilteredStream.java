@@ -1,5 +1,6 @@
 package com.github.j2gl.twitter;
 
+import com.github.j2gl.kafka.TwitterProducer;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -14,6 +15,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -36,11 +39,18 @@ public class FilteredStream {
     /*
      * This method calls the filtered stream endpoint and streams Tweets from it
      * */
-    public void connectStream(String bearerToken, int maxNumberOfTweets) throws IOException, URISyntaxException {
+    public void connectStream(String bearerToken) throws IOException, URISyntaxException {
+        TwitterProducer twitterProducer = new TwitterProducer();
+        KafkaProducer<String, String> producer = twitterProducer.createKafkaProducer();
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setSocketTimeout(30_000)
+                .setConnectTimeout(30_000)
+                .setConnectionRequestTimeout(30_000)
+                .setCookieSpec(CookieSpecs.STANDARD)
+                .build();
+
         try (CloseableHttpClient httpClient = HttpClients.custom()
-                .setDefaultRequestConfig(
-                        RequestConfig.custom()
-                                .setCookieSpec(CookieSpecs.STANDARD).build())
+                .setDefaultRequestConfig(requestConfig)
                 .build()) {
             URIBuilder uriBuilder = new URIBuilder(STREAM_BASE_URI);
             uriBuilder.addParameter("tweet.fields", "author_id,context_annotations,created_at,geo,in_reply_to_user_id,lang,public_metrics,source,text,withheld");
@@ -52,17 +62,28 @@ public class FilteredStream {
             HttpEntity entity;
             try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
                 entity = response.getEntity();
+
                 if (entity != null) {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader((entity.getContent())))) {
-                        String line = reader.readLine();
-                        int count = 0;
-                        while (line != null && count <= maxNumberOfTweets) {
-                            count++;
-                            System.out.println(line);
-                            line = reader.readLine();
+                        String line;
+                        int tweetCount = 0;
+                        while ((line = reader.readLine()) != null) {
+                            tweetCount++;
+                            logger.info("{} - Line: {}", tweetCount, line);
+                            if (!line.isEmpty()) {
+                                ProducerRecord<String, String> record = new ProducerRecord<>("twitter_tweets", null, line);
+                                producer.send(record, (recordMetadata, exception) -> {
+                                    if (exception != null) {
+                                        logger.error("Error occurred", exception);
+                                    }
+                                });
+                            }
                         }
+                    } finally {
+                        logger.info("BufferedReader closed");
                     }
                 }
+
             } finally {
                 logger.info("CloseableHttpResponse closed");
             }
