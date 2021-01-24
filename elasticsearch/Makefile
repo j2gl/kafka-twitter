@@ -1,0 +1,44 @@
+-include .env
+
+BASE_URL=https://kafka-twitter-5225177207.eu-central-1.bonsaisearch.net
+ELASTIC_INDEX=twitter
+ID=KFYONncBOSF22BvM-xIe
+
+health:
+	curl --location --request GET '${BASE_URL}/_cat/health?v' \
+	--header 'Authorization: Basic ${AUTH_TOKEN_BASIC}'
+
+nodes:
+	curl --location --request GET '${BASE_URL}/_cat/nodes?v' \
+	--header 'Authorization: Basic ${AUTH_TOKEN_BASIC}'
+
+list-indices:
+	curl --location --request GET '${BASE_URL}/_cat/indices?v' \
+	--header 'Authorization: Basic ${AUTH_TOKEN_BASIC}'
+
+create-index:
+	curl --location --request PUT '${BASE_URL}/${ELASTIC_INDEX}' \
+	--header 'Authorization: Basic ${AUTH_TOKEN_BASIC}' | jq
+
+delete-index:
+	curl --location --request DELETE '${BASE_URL}/${ELASTIC_INDEX}' \
+	--header 'Authorization: Basic ${AUTH_TOKEN_BASIC}' | jq
+
+put-doc:
+	curl --location --request PUT '${BASE_URL}/${ELASTIC_INDEX}/_doc/1' \
+	--header 'Authorization: Basic ${AUTH_TOKEN_BASIC}' \
+	--header 'Content-Type: application/json' \
+	--data-raw '{ \
+		"course": "kafka", \
+		"from": "udemy", \
+		"module": "ElasticSearch" \
+	}' | jq
+
+delete-doc:
+	curl --location --request DELETE '${BASE_URL}/${ELASTIC_INDEX}/_doc/${ID}' \
+	--header 'Authorization: Basic ${AUTH_TOKEN_BASIC}' | jq
+
+get-doc:
+	curl --location --request GET '${BASE_URL}/${ELASTIC_INDEX}/_doc/${ID}' \
+	--header 'Authorization: Basic ${AUTH_TOKEN_BASIC}' | jq
+
