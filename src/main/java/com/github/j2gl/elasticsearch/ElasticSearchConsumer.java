@@ -29,14 +29,11 @@ public class ElasticSearchConsumer {
         credentialsProvider.setCredentials(AuthScope.ANY,
                 new UsernamePasswordCredentials(username, password));
 
-        RestClientBuilder builder = RestClient.builder(
-                new HttpHost(hostname, 443, "https")).setHttpClientConfigCallback(
-                new RestClientBuilder.HttpClientConfigCallback() {
-                    @Override
-                    public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpAsyncClientBuilder) {
-                        return httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-                    }
-                });
+        RestClientBuilder builder = RestClient.builder(new HttpHost(hostname, 443, "https"))
+                .setHttpClientConfigCallback(
+                    httpAsyncClientBuilder -> httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
+                );
+
         return new RestHighLevelClient(builder);
     }
 
