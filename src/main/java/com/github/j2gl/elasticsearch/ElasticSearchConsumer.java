@@ -1,5 +1,6 @@
 package com.github.j2gl.elasticsearch;
 
+import com.google.gson.JsonParser;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -68,23 +69,39 @@ public class ElasticSearchConsumer {
         KafkaConsumer<String, String> consumer = createConsumer("twitter_tweets");
 
         while (true) {
+
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
             for (ConsumerRecord<String, String> record : records) {
+                // Strategy 1: generate kafka generic ID.
+                // String id = record.topic() + "_" + record.partition() + "_" + record.offset();
+
                 final String jsonString = record.value();
+                // Strategy 2
+                String id = extractIdFromTweet(jsonString);
 
                 IndexRequest indexRequest = new IndexRequest("twitter")
+                        .id(id)
                         .source(jsonString, XContentType.JSON);
 
                 IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
                 logger.info("ID: {}", indexResponse.getId());
                 try {
-                    Thread.sleep(1_000);
+                    Thread.sleep(2_000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         }
 //        client.close();
+    }
+
+    private static String extractIdFromTweet(String jsonTweet) {
+        return JsonParser.parseString(jsonTweet)
+                .getAsJsonObject()
+                .get("data")
+                .getAsJsonObject()
+                .get("id")
+                .getAsString();
     }
 
 
