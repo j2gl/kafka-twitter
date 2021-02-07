@@ -1,5 +1,11 @@
 # README
 
+This is a POC from the course I'm taking for [Kafka in udemy](https://www.udemy.com/share/1013hcA0oTdFxVQHo=/).
+
+It has two main programs:
+* **TwitterStream**: Connects to Twitter API and then sends tweet messages to `twitter_tweets` topic.
+* **ElasticSearchConsumer**: Which consumes messages from `twitter_tweets` topic, and pushes them to Kafka.
+
 ## Requisites
 * Java 
 * Kafka
@@ -37,4 +43,7 @@ kafka-console-consumer --bootstrap-server localhost:9092 --topic twitter_tweets 
 
 # Delete topic 
 kafka-topics --bootstrap-server localhost:9092 --topic twitter_tweets --delete
+
+# Check consumer group
+kafka-consumer-groups --bootstrap-server localhost:9092 --group kafka-demo-elasticsearch --describe
 ```
