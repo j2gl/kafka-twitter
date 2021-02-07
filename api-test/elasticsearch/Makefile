@@ -4,7 +4,7 @@
 
 BASE_URL=https://kafka-twitter-5225177207.eu-central-1.bonsaisearch.net
 ELASTIC_INDEX=twitter
-ELASTICSEARCH_ID=SFYzNncBOSF22BvMDhIy
+ELASTICSEARCH_ID=1358372433292496896
 
 health:
 	curl --location --request GET '${BASE_URL}/_cat/health?v' \
