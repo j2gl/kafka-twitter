@@ -48,7 +48,6 @@ public class ElasticSearchConsumer {
     public static KafkaConsumer<String, String> createConsumer(String topic) {
         final String bootstrapServers = "127.0.0.1:9092";
         final String groupId = "kafka-demo-elasticsearch";
-        //final String topic = "twitter_tweets";
 
         final Properties properties = new Properties();
         properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -56,6 +55,8 @@ public class ElasticSearchConsumer {
         properties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        properties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        properties.setProperty(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "10");
 
         // Create consumer
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
@@ -71,6 +72,8 @@ public class ElasticSearchConsumer {
         while (true) {
 
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            logger.info("Received size={} records", records.count());
+
             for (ConsumerRecord<String, String> record : records) {
                 // Strategy 1: generate kafka generic ID.
                 // String id = record.topic() + "_" + record.partition() + "_" + record.offset();
@@ -86,10 +89,18 @@ public class ElasticSearchConsumer {
                 IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
                 logger.info("ID: {}", indexResponse.getId());
                 try {
-                    Thread.sleep(2_000);
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+            }
+            logger.debug("Committing offsets.");
+            consumer.commitSync();
+            logger.info("Offsets committed for size={} records", records.count());
+            try {
+                Thread.sleep(2_0000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
 //        client.close();
