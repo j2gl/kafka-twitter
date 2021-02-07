@@ -30,3 +30,6 @@
 
 ### Other
 /temp
+
+# Specific to project
+.env

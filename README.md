@@ -6,6 +6,9 @@ It has two main programs:
 * **TwitterStream**: Connects to Twitter API and then sends tweet messages to `twitter_tweets` topic.
 * **ElasticSearchConsumer**: Which consumes messages from `twitter_tweets` topic, and pushes them to Kafka.
 
+Under api-test, you can find curls to test the [twitter api](api-test/elasticsearch) and [elasticsearch api](api-test/twitter).
+
+
 ## Requisites
 * Java 
 * Kafka

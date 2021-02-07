@@ -1,8 +1,10 @@
 -include .env
 
+# Please add a .env file with the AUTH_TOKEN_BASIC for bonsaisearch
+
 BASE_URL=https://kafka-twitter-5225177207.eu-central-1.bonsaisearch.net
 ELASTIC_INDEX=twitter
-ID=KFYONncBOSF22BvM-xIe
+ELASTICSEARCH_ID=SFYzNncBOSF22BvMDhIy
 
 health:
 	curl --location --request GET '${BASE_URL}/_cat/health?v' \
@@ -35,10 +37,10 @@ put-doc:
 	}' | jq
 
 delete-doc:
-	curl --location --request DELETE '${BASE_URL}/${ELASTIC_INDEX}/_doc/${ID}' \
+	curl --location --request DELETE '${BASE_URL}/${ELASTIC_INDEX}/_doc/${ELASTIC_SEARCH_ID}' \
 	--header 'Authorization: Basic ${AUTH_TOKEN_BASIC}' | jq
 
 get-doc:
-	curl --location --request GET '${BASE_URL}/${ELASTIC_INDEX}/_doc/${ID}' \
+	curl --location --request GET '${BASE_URL}/${ELASTIC_INDEX}/_doc/${ELASTICSEARCH_ID}' \
 	--header 'Authorization: Basic ${AUTH_TOKEN_BASIC}' | jq
 
