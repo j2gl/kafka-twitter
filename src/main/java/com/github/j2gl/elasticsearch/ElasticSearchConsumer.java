@@ -58,7 +58,7 @@ public class ElasticSearchConsumer {
         properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         properties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-        properties.setProperty(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "100");
+        properties.setProperty(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "50");
 
         // Create consumer
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
@@ -103,12 +103,12 @@ public class ElasticSearchConsumer {
                 logger.debug("Committing offsets.");
                 consumer.commitSync();
                 logger.info("Offsets committed for size={} records", records.count());
-
-                try {
-                    Thread.sleep(20_000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            }
+            try {
+                // Pause for demo purposes
+                Thread.sleep(5_000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
 //        client.close();
@@ -122,6 +122,5 @@ public class ElasticSearchConsumer {
                 .get("id")
                 .getAsString();
     }
-
 
 }

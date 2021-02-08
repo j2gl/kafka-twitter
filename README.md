@@ -39,7 +39,7 @@ kafka-topics --bootstrap-server localhost:9092 --list
 kafka-topics --bootstrap-server localhost:9092 --create --topic twitter_tweets --partitions 6 --replication-factor 1
 
 # Show topic information
-kafka-topics --bootstrap-server localhost:9092 --topic twitter_tweets --describe
+kafka-topics --bootstrap-server localhost:9092 --describe --topic twitter_tweets 
 
 # Create consumer
 kafka-console-consumer --bootstrap-server localhost:9092 --topic twitter_tweets --from-beginning
@@ -49,4 +49,8 @@ kafka-topics --bootstrap-server localhost:9092 --topic twitter_tweets --delete
 
 # Check consumer group
 kafka-consumer-groups --bootstrap-server localhost:9092 --group kafka-demo-elasticsearch --describe
+
+# Reset offsets
+kafka-consumer-groups --bootstrap-server localhost:9092 --group kafka-demo-elasticsearch --reset-offsets --topic twitter_tweets --execute --to-earliest
+
 ```
